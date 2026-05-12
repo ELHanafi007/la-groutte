@@ -67,7 +67,6 @@ export function EventsPreviewSection() {
           ease: "none",
           scrollTrigger: {
             trigger: sectionRef.current,
-            pin: true,
             scrub: 1,
             start: "top top",
             end: () => `+=${cardsWidth}`,
@@ -81,10 +80,11 @@ export function EventsPreviewSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="section-padding relative overflow-hidden bg-[#121414] py-32">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,oklch(0.55_0.22_18/5%),transparent_70%)] opacity-50" />
-      
-      <div ref={containerRef} className="relative z-10 mx-auto max-w-screen-2xl">
+    <section ref={sectionRef} className="relative bg-[#121414] py-32 lg:h-[300vh]">
+      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,oklch(0.55_0.22_18/5%),transparent_70%)] opacity-50" />
+        
+        <div ref={containerRef} className="relative z-10 mx-auto max-w-screen-2xl">
         <Container>
           <div className="mb-12">
             <SectionHeading
@@ -188,6 +188,7 @@ export function EventsPreviewSection() {
             </Link>
           </div>
         </Container>
+      </div>
       </div>
     </section>
   );

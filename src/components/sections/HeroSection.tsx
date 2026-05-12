@@ -18,14 +18,13 @@ export function HeroSection() {
     gsap.registerPlugin(ScrollTrigger);
     
     const ctx = gsap.context(() => {
-      // Pinned Scrub Animation for the Hero Section
+      // Scrub Animation for the Hero Section (using CSS sticky instead of GSAP pin)
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
           start: "top top",
-          end: "+=150%",
+          end: "bottom top",
           scrub: 1,
-          pin: true,
         }
       });
 
@@ -38,10 +37,8 @@ export function HeroSection() {
 
       // Phone image scales up and moves to center
       tl.to(imageRef.current, {
-        scale: 1.3,
-        xPercent: -50,
-        left: "50%",
-        y: -50,
+        scale: 1.2,
+        y: -20,
         duration: 1,
         ease: "power2.inOut"
       }, 0);
@@ -58,16 +55,17 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative flex min-h-[100dvh] items-center overflow-hidden bg-[#121414]">
-      {/* ── Background Layers ── */}
-      <div ref={bgRef} className="absolute inset-0 -z-20">
-        <img src="/hero-bg.png" alt="" className="h-full w-full object-cover opacity-60" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#121414] via-[#121414]/90 to-[#121414]/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#121414] via-transparent to-[#121414]/80" />
-      </div>
+    <section ref={containerRef} className="relative h-[200vh] bg-[#121414]">
+      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+        {/* ── Background Layers ── */}
+        <div ref={bgRef} className="absolute inset-0 -z-20">
+          <img src="/hero-bg.png" alt="" className="h-full w-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#121414] via-[#121414]/90 to-[#121414]/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#121414] via-transparent to-[#121414]/80" />
+        </div>
 
-      <Container className="relative z-10 w-full">
-        <div className="flex flex-col lg:flex-row items-center justify-between w-full relative h-[70vh]">
+        <Container className="relative z-10 w-full">
+          <div className="flex flex-col lg:flex-row items-center justify-between w-full relative h-[70vh]">
           
           {/* ── Left Column: Text Content ── */}
           <div ref={textRef} className="max-w-xl z-20 absolute lg:static left-0 top-1/4">
@@ -140,6 +138,7 @@ export function HeroSection() {
           </div>
         </div>
       </Container>
+      </div>
     </section>
   );
 }
