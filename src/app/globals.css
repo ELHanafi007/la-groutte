@@ -1,26 +1,318 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/* ===================================================
+   LA GROTTE DU PÊCHEUR — Dark Nightlife Design System
+   Crimson Red + Amber Gold | Cave Aesthetic
+   =================================================== */
 
 @theme inline {
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-jakarta);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand Colors */
+  --color-crimson: var(--crimson);
+  --color-crimson-light: var(--crimson-light);
+  --color-crimson-dark: var(--crimson-dark);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-dark: var(--gold-dark);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ===================================================
+   DARK-ONLY THEME — Nightlife doesn't do light mode
+   =================================================== */
+:root {
+  /* Brand */
+  --crimson: oklch(0.55 0.22 18);
+  --crimson-light: oklch(0.65 0.20 18);
+  --crimson-dark: oklch(0.42 0.22 18);
+  --gold: oklch(0.75 0.14 75);
+  --gold-light: oklch(0.82 0.10 75);
+  --gold-dark: oklch(0.62 0.16 75);
+  --surface: oklch(0.14 0.008 250);
+  --surface-elevated: oklch(0.18 0.008 250);
+
+  /* Semantic */
+  --background: oklch(0.09 0.005 250);
+  --foreground: oklch(0.95 0.01 80);
+
+  --card: oklch(0.13 0.008 250);
+  --card-foreground: oklch(0.95 0.01 80);
+
+  --popover: oklch(0.15 0.008 250);
+  --popover-foreground: oklch(0.95 0.01 80);
+
+  --primary: oklch(0.55 0.22 18);
+  --primary-foreground: oklch(0.98 0.005 80);
+
+  --secondary: oklch(0.18 0.008 250);
+  --secondary-foreground: oklch(0.85 0.01 80);
+
+  --muted: oklch(0.20 0.008 250);
+  --muted-foreground: oklch(0.55 0.01 60);
+
+  --accent: oklch(0.75 0.14 75);
+  --accent-foreground: oklch(0.12 0.01 75);
+
+  --destructive: oklch(0.55 0.25 27);
+
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.55 0.22 18);
+
+  --radius: 0.75rem;
+}
+
+/* ===================================================
+   BASE STYLES
+   =================================================== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-tight text-foreground;
+  }
+
+  h1 {
+    @apply text-4xl font-extrabold leading-[1.08] md:text-5xl lg:text-6xl xl:text-7xl;
+  }
+  h2 {
+    @apply text-3xl font-bold leading-[1.12] md:text-4xl lg:text-5xl;
+  }
+  h3 {
+    @apply text-xl font-semibold leading-snug md:text-2xl;
+  }
+  h4 {
+    @apply text-lg font-semibold leading-snug;
+  }
+
+  p {
+    @apply leading-relaxed text-muted-foreground;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-crimson;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: oklch(0.55 0.22 18 / 30%);
+    color: oklch(0.98 0.005 80);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ===================================================
+   UTILITY CLASSES
+   =================================================== */
+@layer utilities {
+  .section-padding {
+    @apply px-4 py-20 md:px-6 md:py-28 lg:px-8 lg:py-36;
+  }
+
+  .section-padding-sm {
+    @apply px-4 py-14 md:px-6 md:py-20 lg:px-8 lg:py-24;
+  }
+
+  .container-narrow {
+    @apply mx-auto max-w-4xl px-4 md:px-6;
+  }
+
+  .container-wide {
+    @apply mx-auto max-w-7xl px-4 md:px-6 lg:px-8;
+  }
+
+  /* Text Gradient — Crimson to Gold */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      135deg,
+      oklch(0.55 0.22 18),
+      oklch(0.75 0.14 75)
+    );
+  }
+
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      135deg,
+      oklch(0.75 0.14 75),
+      oklch(0.85 0.10 75)
+    );
+  }
+
+  /* Glow Effects */
+  .glow-crimson {
+    box-shadow:
+      0 0 20px oklch(0.55 0.22 18 / 15%),
+      0 0 60px oklch(0.55 0.22 18 / 8%);
+  }
+
+  .glow-crimson-lg {
+    box-shadow:
+      0 0 30px oklch(0.55 0.22 18 / 20%),
+      0 0 80px oklch(0.55 0.22 18 / 10%),
+      0 0 120px oklch(0.55 0.22 18 / 5%);
+  }
+
+  .glow-gold {
+    box-shadow:
+      0 0 20px oklch(0.75 0.14 75 / 15%),
+      0 0 60px oklch(0.75 0.14 75 / 8%);
+  }
+
+  /* Glass — Dark */
+  .glass {
+    @apply border border-white/[0.06] shadow-2xl backdrop-blur-2xl;
+    background: oklch(0.13 0.008 250 / 80%);
+  }
+
+  .glass-elevated {
+    @apply border border-white/[0.08] shadow-2xl backdrop-blur-2xl;
+    background: oklch(0.17 0.008 250 / 85%);
+  }
+
+  /* Premium Shadow Scale */
+  .shadow-premium-sm {
+    box-shadow:
+      0 1px 3px oklch(0 0 0 / 20%),
+      0 4px 12px oklch(0 0 0 / 15%);
+  }
+
+  .shadow-premium {
+    box-shadow:
+      0 4px 8px oklch(0 0 0 / 20%),
+      0 12px 32px oklch(0 0 0 / 20%);
+  }
+
+  .shadow-premium-lg {
+    box-shadow:
+      0 8px 16px oklch(0 0 0 / 25%),
+      0 24px 64px oklch(0 0 0 / 25%);
+  }
+
+  /* Noise Texture Overlay */
+  .noise {
+    position: relative;
+  }
+  .noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Divider line with glow */
+  .divider-glow {
+    @apply h-px w-full;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(0.55 0.22 18 / 40%),
+      oklch(0.75 0.14 75 / 30%),
+      transparent
+    );
+  }
+}
+
+/* ===================================================
+   SCROLLBAR — Premium Dark
+   =================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: oklch(0.09 0.005 250);
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.25 0.01 250);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.35 0.01 250);
+}
+
+/* ===================================================
+   REDUCED MOTION
+   =================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===================================================
+   LENIS SMOOTH SCROLL — Integration
+   =================================================== */
+html.lenis {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
