@@ -88,6 +88,7 @@ export function HowItWorksSection() {
         />
 
         <div className="mt-16 flex flex-col gap-8 md:gap-12 relative mx-auto max-w-4xl">
+          {steps.map((step, i) => (
             <div
               key={step.step}
               ref={(el) => {
