@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
+import { useLenis } from "@studio-freight/react-lenis";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -27,10 +28,20 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const lenis = useLenis();
   useEffect(() => {
-    document.body.style.overflow = isMobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [isMobileOpen]);
+    if (isMobileOpen) {
+      lenis?.stop();
+      document.body.style.overflow = "hidden";
+    } else {
+      lenis?.start();
+      document.body.style.overflow = "";
+    }
+    return () => { 
+      lenis?.start();
+      document.body.style.overflow = ""; 
+    };
+  }, [isMobileOpen, lenis]);
 
   return (
     <>

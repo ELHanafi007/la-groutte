@@ -46,31 +46,19 @@ export function HowItWorksSection() {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      // Sticky Stack Animation
+      // Scale down and fade effect using ScrollTrigger (without pinning)
       cardsRef.current.forEach((card, index) => {
         if (!card) return;
 
-        gsap.to(card, {
-          scrollTrigger: {
-            trigger: card,
-            start: `top top+=${100 + index * 40}`,
-            endTrigger: sectionRef.current,
-            end: "bottom bottom",
-            pin: true,
-            pinSpacing: false,
-            scrub: true,
-          },
-        });
-
-        // Scale down effect when the next card comes over
+        // Effect when the next card comes over
         if (index < cardsRef.current.length - 1) {
           gsap.to(card, {
-            scale: 0.95 - index * 0.05,
-            opacity: 0.5,
+            scale: 0.9,
+            opacity: 0.3,
             scrollTrigger: {
               trigger: cardsRef.current[index + 1],
-              start: `top bottom`,
-              end: `top top+=${100 + (index + 1) * 40}`,
+              start: "top center",
+              end: "top top+=100",
               scrub: true,
             },
           });
@@ -100,13 +88,13 @@ export function HowItWorksSection() {
         />
 
         <div className="mt-16 flex flex-col gap-8 md:gap-12 relative mx-auto max-w-4xl">
-          {steps.map((step, i) => (
             <div
               key={step.step}
               ref={(el) => {
                 cardsRef.current[i] = el;
               }}
-              className="group relative w-full overflow-hidden rounded-3xl border border-white/[0.08] bg-[#1a1c1c] shadow-2xl flex flex-col md:flex-row min-h-[350px]"
+              className="group relative w-full overflow-hidden rounded-3xl border border-white/[0.08] bg-[#1a1c1c] shadow-2xl flex flex-col md:flex-row min-h-[350px] sticky top-32"
+              style={{ zIndex: i + 1 }}
             >
               {/* Image side */}
               <div className="relative w-full md:w-1/2 h-64 md:h-auto overflow-hidden">
