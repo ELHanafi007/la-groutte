@@ -329,7 +329,7 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
 
             {/* QR Display */}
             <div className="flex flex-col items-center px-6 pt-8 pb-6">
-              {qrDataUrl && (
+              {reservation?.qr_token && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
