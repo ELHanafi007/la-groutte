@@ -91,6 +91,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Send confirmation email (async, don't block the response)
+    if (process.env.RESEND_API_KEY) {
+      const formatDate = (dateStr: string) =>
+        new Date(dateStr).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        });
+
+      const qrUrl = `${req.nextUrl.origin}/reservation/${reservation.id}?token=${qr_token}`;
+      
+      // We don't await here to return the response to the user faster
+      import("@/lib/email").then(({ sendTicketEmail }) => {
+        sendTicketEmail({
+          email: reservation.email,
+          name: reservation.name,
+          eventTitle: event.title,
+          date: formatDate(event.date),
+          qrUrl,
+          partySize: reservation.party_size,
+        });
+      });
+    }
+
     return NextResponse.json({
       success: true,
       reservation: {
@@ -102,7 +126,8 @@ export async function POST(req: NextRequest) {
         status: reservation.status,
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("API Error:", err);
     return NextResponse.json(
       { error: "Erreur interne du serveur." },
       { status: 500 }

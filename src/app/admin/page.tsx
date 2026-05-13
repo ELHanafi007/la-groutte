@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
@@ -33,29 +34,81 @@ const STATUS_CONFIG: Record<ReservationStatus, { label: string; color: string; i
 };
 
 export default function AdminPage() {
+  const router = useRouter();
   const [events, setEvents] = useState<EventWithCapacity[]>([]);
   const [reservations, setReservations] = useState<(Reservation & { events?: { title: string } })[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "reservations">("overview");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // New event form state
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    type: "dj_party" as const,
+    date: "",
+    doors_open: "22:00",
+    capacity: 100,
+    description: "",
+  });
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    const [eventsRes, reservationsRes] = await Promise.all([
+      supabase.from("event_capacity").select("*").order("date", { ascending: true }),
+      supabase
+        .from("reservations")
+        .select("*, events(title)")
+        .order("created_at", { ascending: false })
+        .limit(100),
+    ]);
+
+    if (eventsRes.data) setEvents(eventsRes.data as EventWithCapacity[]);
+    if (reservationsRes.data) setReservations(reservationsRes.data as (Reservation & { events?: { title: string } })[]);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      const [eventsRes, reservationsRes] = await Promise.all([
-        supabase.from("event_capacity").select("*").order("date", { ascending: true }),
-        supabase
-          .from("reservations")
-          .select("*, events(title)")
-          .order("created_at", { ascending: false })
-          .limit(100),
-      ]);
-
-      if (eventsRes.data) setEvents(eventsRes.data as EventWithCapacity[]);
-      if (reservationsRes.data) setReservations(reservationsRes.data as (Reservation & { events?: { title: string } })[]);
-      setLoading(false);
-    }
-    fetchData();
+    fetchAllData();
   }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
+  async function handleCreateEvent(e: React.FormEvent) {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      const { error } = await supabase.from("events").insert([
+        {
+          ...newEvent,
+          status: "upcoming",
+        },
+      ]);
+      if (error) throw error;
+      setShowCreateModal(false);
+      fetchAllData();
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la création de l'événement");
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  async function updateReservationStatus(id: string, status: ReservationStatus) {
+    try {
+      const { error } = await supabase.from("reservations").update({ status }).eq("id", id);
+      if (error) throw error;
+      // Real-time listener will update the UI
+    } catch (err) {
+      console.error(err);
+      alert("Erreur lors de la mise à jour");
+    }
+  }
 
   useEffect(() => {
     const channel = supabase
@@ -121,11 +174,33 @@ export default function AdminPage() {
               <h1 className="text-2xl font-bold text-foreground md:text-3xl">Tableau de bord</h1>
               <p className="mt-1 text-sm text-muted-foreground">Gestion des événements et réservations en temps réel</p>
             </div>
-            <a href="/scan" target="_blank" className="inline-flex items-center gap-2 rounded-xl bg-crimson px-5 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-crimson-light hover:shadow-[0_0_20px_oklch(0.55_0.22_18/30%)]">
-              <Scan className="h-4 w-4" />
-              Ouvrir le scanner
-              <ArrowUpRight className="h-3 w-3" />
-            </a>
+            <div className="flex flex-wrap gap-3">
+              <a href="/" className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-foreground transition-all hover:bg-white/[0.08]">
+                Voir le site
+              </a>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-400"
+              >
+                Déconnexion
+              </button>
+            </div>
+          </div>
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-5 py-2.5 text-sm font-semibold text-foreground transition-all hover:bg-white/[0.08]"
+              >
+                <Calendar className="h-4 w-4" />
+                Nouvel Événement
+              </button>
+              <a href="/scan" target="_blank" className="inline-flex items-center gap-2 rounded-xl bg-crimson px-5 py-2.5 text-sm font-semibold text-white shadow-premium transition-all hover:bg-crimson-light hover:shadow-[0_0_20px_oklch(0.55_0.22_18/30%)]">
+                <Scan className="h-4 w-4" />
+                Ouvrir le scanner
+                <ArrowUpRight className="h-3 w-3" />
+              </a>
+            </div>
           </div>
         </div>
 
@@ -242,7 +317,25 @@ export default function AdminPage() {
                           <td className="px-4 py-3 text-sm text-muted-foreground">{res.events?.title || "—"}</td>
                           <td className="px-4 py-3 font-mono text-sm text-foreground">{res.party_size}</td>
                           <td className="px-4 py-3 text-xs text-muted-foreground">{TABLE_PREFERENCE_LABELS[res.table_preference]}</td>
-                          <td className="px-4 py-3"><span className={cn("inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold", statusCfg.color)}><statusCfg.icon className="h-2.5 w-2.5" />{statusCfg.label}</span></td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col gap-2">
+                              <span className={cn("inline-flex w-fit items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold", statusCfg.color)}>
+                                <statusCfg.icon className="h-2.5 w-2.5" />
+                                {statusCfg.label}
+                              </span>
+                              <div className="flex gap-1">
+                                {res.status === "pending" && (
+                                  <button onClick={() => updateReservationStatus(res.id, "confirmed")} className="rounded bg-emerald-500/10 p-1 text-emerald-400 hover:bg-emerald-500/20"><CheckCircle2 className="h-3 w-3" /></button>
+                                )}
+                                {["pending", "confirmed"].includes(res.status) && (
+                                  <button onClick={() => updateReservationStatus(res.id, "cancelled")} className="rounded bg-red-500/10 p-1 text-red-400 hover:bg-red-500/20"><XCircle className="h-3 w-3" /></button>
+                                )}
+                                {res.status === "confirmed" && (
+                                  <button onClick={() => updateReservationStatus(res.id, "checked_in")} className="rounded bg-blue-500/10 p-1 text-blue-400 hover:bg-blue-500/20"><Users className="h-3 w-3" /></button>
+                                )}
+                              </div>
+                            </div>
+                          </td>
                           <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatTime(res.created_at)}</td>
                         </tr>
                       );
@@ -254,6 +347,55 @@ export default function AdminPage() {
           </div>
         )}
       </Container>
+
+      {/* Create Event Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg rounded-2xl border border-white/[0.06] bg-card p-6 shadow-2xl">
+            <h2 className="text-xl font-bold text-foreground">Nouvel Événement</h2>
+            <form onSubmit={handleCreateEvent} className="mt-6 space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase">Titre</label>
+                <input type="text" required value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} placeholder="ex: Techno Night VIP" className="w-full rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground focus:border-crimson/40 focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase">Type</label>
+                  <select value={newEvent.type} onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value as any })} className="w-full rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground focus:border-crimson/40 focus:outline-none">
+                    <option value="dj_party">DJ Party</option>
+                    <option value="live_band">Live Band</option>
+                    <option value="ladies_night">Ladies Night</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase">Capacité</label>
+                  <input type="number" required value={newEvent.capacity} onChange={(e) => setNewEvent({ ...newEvent, capacity: Number(e.target.value) })} className="w-full rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground focus:border-crimson/40 focus:outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase">Date</label>
+                  <input type="date" required value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} className="w-full rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground focus:border-crimson/40 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase">Ouverture</label>
+                  <input type="time" required value={newEvent.doors_open} onChange={(e) => setNewEvent({ ...newEvent, doors_open: e.target.value })} className="w-full rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground focus:border-crimson/40 focus:outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase">Description</label>
+                <textarea rows={3} value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} placeholder="Détails de la soirée..." className="w-full rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground focus:border-crimson/40 focus:outline-none resize-none" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-sm font-semibold text-foreground transition-all hover:bg-white/[0.08]">Annuler</button>
+                <button type="submit" disabled={isCreating} className="flex-1 rounded-xl bg-crimson py-3 text-sm font-semibold text-white shadow-premium transition-all hover:bg-crimson-light">
+                  {isCreating ? "Création..." : "Créer l'événement"}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </section>
   );
 }
