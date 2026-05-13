@@ -11,6 +11,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
+import { BrandedQRCode } from "@/components/ui/BrandedQRCode";
 import QRCode from "qrcode";
 import { Container } from "@/components/layout/Container";
 import { supabase } from "@/lib/supabase";
@@ -30,7 +31,6 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
   const { id } = use(params);
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
-  const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -75,13 +75,6 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
           updated_at: new Date().toISOString(),
         });
 
-        const qrUrl = await QRCode.toDataURL(token, {
-          width: 300,
-          margin: 2,
-          color: { dark: "#FFFFFF", light: "#00000000" },
-          errorCorrectionLevel: "H",
-        });
-        setQrDataUrl(qrUrl);
         setLoading(false);
         return;
       }
@@ -96,17 +89,7 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
         setReservation(data as Reservation);
         setEvent(data.events as Event);
 
-        // Generate QR code
-        const qrUrl = await QRCode.toDataURL(data.qr_token, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: "#FFFFFF",
-            light: "#00000000",
-          },
-          errorCorrectionLevel: "H",
-        });
-        setQrDataUrl(qrUrl);
+        // QR will be rendered by BrandedQRCode component
       }
       setLoading(false);
     }
@@ -155,14 +138,87 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
     ctx.font = "bold 20px sans-serif";
     ctx.fillText(event.title, 300, 85);
 
-    // QR Code
-    const qrImg = new Image();
-    qrImg.onload = () => {
-      ctx.drawImage(qrImg, 150, 110, 300, 300);
+    // QR Code — Manual draw to match branded style
+    const qr = QRCode.create(reservation.qr_token, { errorCorrectionLevel: "H" });
+    const { modules } = qr;
+    const mSize = modules.size;
+    const qrDrawSize = 300;
+    const cSize = qrDrawSize / mSize;
+    const startX = 150;
+    const startY = 110;
+
+    // Draw dots
+    for (let y = 0; y < mSize; y++) {
+      for (let x = 0; x < mSize; x++) {
+        if (modules.data[y * mSize + x]) {
+          // Check if eye
+          const isEye = (x < 7 && y < 7) || (x >= mSize - 7 && y < 7) || (x < 7 && y >= mSize - 7);
+          const isCenter = (x >= mSize / 2 - 3 && x < mSize / 2 + 3 && y >= mSize / 2 - 3 && y < mSize / 2 + 3);
+
+          if (isEye || isCenter) continue;
+
+          ctx.fillStyle = "#C62828";
+          ctx.beginPath();
+          ctx.arc(
+            startX + x * cSize + cSize / 2,
+            startY + y * cSize + cSize / 2,
+            cSize / 2.4,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+      }
+    }
+
+    // Draw Eyes
+    const eyePositions = [
+      { x: 0, y: 0 },
+      { x: mSize - 7, y: 0 },
+      { x: 0, y: mSize - 7 },
+    ];
+
+    eyePositions.forEach((pos) => {
+      const ex = startX + pos.x * cSize;
+      const ey = startY + pos.y * cSize;
+      const es = 7 * cSize;
+
+      // Outer
+      ctx.strokeStyle = "#D4A853";
+      ctx.lineWidth = cSize;
+      ctx.beginPath();
+      // @ts-ignore - roundRect might not be in all TS versions of canvas ctx but works in modern browsers
+      ctx.roundRect(ex + cSize / 2, ey + cSize / 2, es - cSize, es - cSize, cSize * 1.5);
+      ctx.stroke();
+
+      // Inner
+      ctx.fillStyle = "#C62828";
+      ctx.beginPath();
+      // @ts-ignore
+      ctx.roundRect(ex + 2 * cSize + cSize / 2, ey + 2 * cSize + cSize / 2, 3 * cSize - cSize, 3 * cSize - cSize, cSize);
+      ctx.fill();
+    });
+
+    // Logo
+    const logoImg = new Image();
+    logoImg.onload = () => {
+      const lSize = 60;
+      const lx = startX + (qrDrawSize - lSize) / 2;
+      const ly = startY + (qrDrawSize - lSize) / 2;
+      
+      // Logo background/border
+      ctx.fillStyle = "#FFFFFF";
+      ctx.beginPath();
+      // @ts-ignore
+      ctx.roundRect(lx - 2, ly - 2, lSize + 4, lSize + 4, 10);
+      ctx.fill();
+      
+      ctx.drawImage(logoImg, lx, ly, lSize, lSize);
 
       // Guest info
       ctx.fillStyle = "#AAAAAA";
       ctx.font = "14px sans-serif";
+      ctx.textAlign = "center";
       ctx.fillText("INVITÉ", 300, 450);
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "bold 22px sans-serif";
@@ -197,7 +253,7 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
       link.href = canvas.toDataURL("image/png");
       link.click();
     };
-    qrImg.src = qrDataUrl;
+    logoImg.src = "/logo.jpg";
   };
 
   const handleShare = async () => {
@@ -287,10 +343,14 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
                   <div className="absolute inset-0 overflow-hidden rounded-2xl">
                     <div className="animate-pulse absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent" />
                   </div>
-                  <img
-                    src={qrDataUrl}
-                    alt="QR Code de réservation"
-                    className="relative z-10 h-56 w-56"
+                  <BrandedQRCode
+                    value={reservation.qr_token}
+                    size={224} // 56 * 4 (matching h-56 w-56)
+                    logoUrl="/logo.jpg"
+                    logoSize={48}
+                    primaryColor="#C62828"
+                    secondaryColor="#D4A853"
+                    className="relative z-10"
                   />
                 </motion.div>
               )}
