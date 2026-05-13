@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import QRCode from "qrcode";
+import Image from "next/image";
 
 interface BrandedQRCodeProps {
   value: string;
@@ -174,11 +175,12 @@ export const BrandedQRCode: React.FC<BrandedQRCodeProps> = ({
             width={logoSize}
             height={logoSize}
           >
-            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-xl border-2 border-surface-elevated bg-white shadow-lg">
-              <img
+            <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-xl border-2 border-surface-elevated bg-white shadow-lg">
+              <Image
                 src={logoUrl}
                 alt="Logo"
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
               />
             </div>
           </foreignObject>

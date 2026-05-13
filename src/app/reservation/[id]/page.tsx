@@ -187,14 +187,14 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
       ctx.strokeStyle = "#D4A853";
       ctx.lineWidth = cSize;
       ctx.beginPath();
-      // @ts-ignore - roundRect might not be in all TS versions of canvas ctx but works in modern browsers
+      // @ts-expect-error - roundRect might not be in all TS versions of canvas ctx but works in modern browsers
       ctx.roundRect(ex + cSize / 2, ey + cSize / 2, es - cSize, es - cSize, cSize * 1.5);
       ctx.stroke();
 
       // Inner
       ctx.fillStyle = "#C62828";
       ctx.beginPath();
-      // @ts-ignore
+      // @ts-expect-error
       ctx.roundRect(ex + 2 * cSize + cSize / 2, ey + 2 * cSize + cSize / 2, 3 * cSize - cSize, 3 * cSize - cSize, cSize);
       ctx.fill();
     });
@@ -209,7 +209,7 @@ export default function ReservationConfirmationPage({ params }: PageProps) {
       // Logo background/border
       ctx.fillStyle = "#FFFFFF";
       ctx.beginPath();
-      // @ts-ignore
+      // @ts-expect-error
       ctx.roundRect(lx - 2, ly - 2, lSize + 4, lSize + 4, 10);
       ctx.fill();
       
