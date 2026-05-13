@@ -263,15 +263,23 @@ export default function ReservePage() {
                 <label htmlFor="phone" className="mb-2 block text-sm font-medium text-foreground">
                   Téléphone *
                 </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+213 ..."
-                  className="w-full rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-crimson/40 focus:outline-none focus:ring-1 focus:ring-crimson/20"
-                />
+                <div className="flex gap-2">
+                  <div className="flex items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 text-sm font-semibold text-muted-foreground">
+                    +212
+                  </div>
+                  <input
+                    id="phone"
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
+                      if (val.length <= 10) setPhone(val);
+                    }}
+                    placeholder="6XXXXXXXX"
+                    className="w-full flex-1 rounded-xl border border-white/[0.08] bg-surface px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/60 transition-colors focus:border-crimson/40 focus:outline-none focus:ring-1 focus:ring-crimson/20"
+                  />
+                </div>
               </div>
             </div>
 
